@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using STranslate.Plugin.Ocr.Gemini.View;
 using STranslate.Plugin.Ocr.Gemini.ViewModel;
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows.Controls;
 
@@ -216,15 +217,42 @@ public class Main : ObservableObject, IOcrPlugin, ILlm
         var firstCandidate = parsedData?["candidates"] is JsonArray candidates && candidates.Count > 0 ? candidates[0] : null;
         var contentNode = firstCandidate?["content"];
         var firstPart = contentNode?["parts"] is JsonArray parts && parts.Count > 0 ? parts[0] : null;
-        var data = firstPart?["text"]?.ToString() ?? throw new Exception($"No data\nRaw: {response}");
 
-        var result = new OcrResult();
-        foreach (var item in data.Split("\n").ToList().Select(item => new OcrContent { Text = item }))
-        {
-            result.OcrContents.Add(item);
+        // start
+        var wordsResultNode = firstPart?["words_result"];
+        if (wordsResultNode != null && wordsResultNode is JsonArray) {
+            var ocrResult = new OcrResult();
+            var wordsResult = JsonSerializer.Deserialize<List<Words_resultItem>>(
+                wordsResultNode.ToJsonString()
+            );
+            if (wordsResult != null) {
+                foreach (var item in wordsResult)
+                {
+                    var ocrContent = new OcrContent { Text = item.words };
+                    Converter(item.location).ForEach(pg =>
+                    {
+                        //仅位置不全为0时添加
+                        if (!pg.X.Equals(pg.Y) || pg.X != 0)
+                            ocrContent.BoxPoints.Add(new BoxPoint(pg.X, pg.Y));
+                    });
+                    ocrResult.OcrContents.Add(ocrContent);
+                }
+            }
+            return ocrResult;
+        } else {
+            var data = firstPart?["text"]?.ToString() ?? throw new Exception($"No data\nRaw: {response}");
+
+            var result = new OcrResult();
+            foreach (var item in data.Split("\n").ToList().Select(item => new OcrContent { Text = item }))
+            {
+                result.OcrContents.Add(item);
+            }
+
+            return result;
         }
+        // end
 
-        return result;
+
     }
 
     private string ConvertLanguage(LangEnum langEnum) => langEnum switch
@@ -262,4 +290,52 @@ public class Main : ObservableObject, IOcrPlugin, ILlm
         LangEnum.Ukrainian => "Ukrainian",
         _ => "Requires you to identify automatically"
     };
+
+    public List<BoxPoint> Converter(Location location)
+    {
+        return
+        [
+            //left top
+            new BoxPoint(location.left, location.top),
+
+            //right top
+            new BoxPoint(location.left + location.width, location.top),
+
+            //right bottom
+            new BoxPoint(location.left + location.width, location.top + location.height),
+
+            //left bottom
+            new BoxPoint(location.left, location.top + location.height)
+        ];
+    }
+
+    public class Location
+    {
+        /// <summary>
+        /// </summary>
+        public int top { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public int left { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public int width { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public int height { get; set; }
+    }
+
+    public class Words_resultItem
+    {
+        /// <summary>
+        /// </summary>
+        public string words { get; set; } = string.Empty;
+
+        /// <summary>
+        /// </summary>
+        public Location location { get; set; } = new();
+    }
 }

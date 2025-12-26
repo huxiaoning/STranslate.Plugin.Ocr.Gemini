@@ -1,0 +1,69 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "Hides GUI wizard-style installers\nPrevents PATH pollution from installing lots of programs",
+            "words_result": [
+              {
+                "location": {
+                  "height": 18,
+                  "left": 13,
+                  "top": 13,
+                  "width": 248
+                },
+                "vertexes_location": [
+                  {
+                    "x": 13,
+                    "y": 14
+                  },
+                  {
+                    "x": 262,
+                    "y": 14
+                  },
+                  {
+                    "x": 262,
+                    "y": 33
+                  },
+                  {
+                    "x": 13,
+                    "y": 33
+                  }
+                ],
+                "words": "Hides GUI wizard-style installers"
+              },
+              {
+                "location": {
+                  "height": 20,
+                  "left": 11,
+                  "top": 37,
+                  "width": 436
+                },
+                "vertexes_location": [
+                  {
+                    "x": 12,
+                    "y": 37
+                  },
+                  {
+                    "x": 448,
+                    "y": 38
+                  },
+                  {
+                    "x": 448,
+                    "y": 58
+                  },
+                  {
+                    "x": 12,
+                    "y": 57
+                  }
+                ],
+                "words": "Prevents PATH pollution from installing lots of programs"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
